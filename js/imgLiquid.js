@@ -69,6 +69,7 @@ imgLiquid.injectCss = '.imgLiquid img {visibility:hidden}';
 
 			this.defaults = {
 				fill: true,
+				upScale: true,
 				verticalAlign: 'center',			//	'top'	//	'bottom' // '50%'  // '10%'
 				horizontalAlign: 'center',			//	'left'	//	'right'  // '50%'  // '10%'
 				useBackgroundSize: true,
@@ -156,10 +157,27 @@ imgLiquid.injectCss = '.imgLiquid img {visibility:hidden}';
 					}
 
 					$imgBoxCont.css({
-						'background-size':		(settings.fill) ? 'cover' : 'contain',
 						'background-position':	(settings.horizontalAlign + ' ' + settings.verticalAlign).toLowerCase(),
 						'background-repeat':	'no-repeat'
 					});
+
+					// Check if we need to test whether the image will upscale or not
+					if (settings.upScale)
+					{
+						$imgBoxCont.css({
+							'background-size':		(settings.fill) ? 'cover' : 'contain'
+						});
+					}
+					else
+					{
+						// Test if the image is going to upscale and only apply the background-size if it won’t
+						if ($img[0].width > $imgBoxCont.width() || $img[0].height > $imgBoxCont.height())
+						{
+							$imgBoxCont.css({
+								'background-size':		(settings.fill) ? 'cover' : 'contain'
+							});
+						}
+					}
 
 					$('a:first', $imgBoxCont).css({
 						'display':	'block',
@@ -352,7 +370,7 @@ imgLiquid.injectCss = '.imgLiquid img {visibility:hidden}';
 					// Align Y
 					va = settings.verticalAlign.toLowerCase();
 					vdif = $imgCH - hn;
-					if (va === 'top') margT = 0;
+					if (va === 'left') margT = 0;
 					if (va === 'center') margT = vdif * 0.5;
 					if (va === 'bottom') margT = vdif;
 					if (va.indexOf('%') !== -1){
@@ -369,6 +387,47 @@ imgLiquid.injectCss = '.imgLiquid img {visibility:hidden}';
 						'margin-left': Math.floor(margL),
 						'margin-top': Math.floor(margT)
 					});
+
+
+					// Check if we need to test for upscaling
+					if (!settings.upScale)
+					{
+						// Test if the image is going to end up upscaling and prevent that
+						if ($img.data('owidth') < $imgCW || $img.data('oheight') < $imgCH)
+						{
+
+							// Align X
+							hdif = $imgCW - $img.data('owidth');
+							if (ha === 'left') margL = 0;
+							if (ha === 'center') margL = hdif * 0.5;
+							if (ha === 'right') margL = hdif;
+							if (ha.indexOf('%') !== -1){
+								ha = parseInt (ha.replace('%',''), 10);
+								if (ha > 0) margL = hdif * ha * 0.01;
+							}
+
+
+							// Align Y
+							vdif = $imgCH - $img.data('oheight');
+							if (va === 'left') margT = 0;
+							if (va === 'center') margT = vdif * 0.5;
+							if (va === 'bottom') margT = vdif;
+							if (va.indexOf('%') !== -1){
+								va = parseInt (va.replace('%',''), 10);
+								if (va > 0) margT = vdif * va * 0.01;
+							}
+
+							$img.css({
+								'width': 'auto',
+								'height': 'auto',
+								'max-width': $img.data('owidth'),
+								'max-height': $img.data('oheight'),
+								'margin-left': Math.floor(margL),
+								'margin-top': Math.floor(margT)
+							});
+						}
+
+					}
 
 
 					// FadeIn > Only first time
